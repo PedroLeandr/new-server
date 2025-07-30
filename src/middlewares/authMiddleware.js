@@ -6,7 +6,7 @@ function authMiddleware(req, res, next) {
 
   if (!password) {
     console.log(`[ERROR] Password not provided for email: ${req.body.email || 'N/A'} at ${timestamp}`);
-    res.status(400).json({ message: 'Senha não fornecida' });
+    res.status(400).json({ error: 'Senha não fornecida' });
     console.log(`[DEBUG] Error response sent: Status 400 (missing password) at ${timestamp}`);
     return;
   }
@@ -16,7 +16,7 @@ function authMiddleware(req, res, next) {
   if (!senhaSegura.test(password)) {
     console.log(`[ERROR] Weak password detected for email: ${req.body.email || 'N/A'} at ${timestamp}`);
     res.status(400).json({
-      message: 'A senha deve ter pelo menos 9 caracteres, incluindo letras, números e símbolos',
+      error: 'A senha deve ter pelo menos 9 caracteres, incluindo letras, números e símbolos',
     });
     console.log(`[DEBUG] Error response sent: Status 400 (weak password) at ${timestamp}`);
     return;
@@ -31,7 +31,7 @@ function authMiddleware(req, res, next) {
   if (sqlInjectionPadroes.some(padrao => senhaMinuscula.includes(padrao))) {
     console.log(`[ERROR] SQL injection pattern detected in password for email: ${req.body.email || 'N/A'} at ${timestamp}`);
     res.status(400).json({
-      message: 'A senha contém padrões inválidos ou perigosos',
+      error: 'A senha contém padrões inválidos ou perigosos',
     });
     console.log(`[DEBUG] Error response sent: Status 400 (SQL pattern detected) at ${timestamp}`);
     return;
