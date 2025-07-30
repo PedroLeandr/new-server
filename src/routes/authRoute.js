@@ -1,10 +1,9 @@
 const express = require("express");
 const { registerController, loginController } = require("../controllers/authController");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
-console.log("[DEBUG] Auth router initialized at", new Date().toISOString());
 
-// Middleware to log incoming requests
 router.use((req, res, next) => {
   console.log(
     `[DEBUG] ${req.method} request to ${req.originalUrl} at`,
@@ -14,12 +13,12 @@ router.use((req, res, next) => {
   next();
 });
 
-router.post("/register", (req, res, next) => {
+router.post("/register", authMiddleware, (req, res, next) => {
   console.log("[DEBUG] Register route called at", new Date().toISOString());
   registerController(req, res, next);
 });
 
-router.post("/login", (req, res, next) => {
+router.post("/login", authMiddleware, (req, res, next) => {
   console.log("[DEBUG] Login route called at", new Date().toISOString());
   loginController(req, res, next);
 });

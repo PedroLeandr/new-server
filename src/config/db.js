@@ -9,7 +9,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 });
 
-console.log("[DEBUG] MySQL connection pool created with config:", {
+console.log("[SUCESS] MySQL connection pool created with config:", {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   database: process.env.DB_NAME,
