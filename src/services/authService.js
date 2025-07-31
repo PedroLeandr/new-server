@@ -1,44 +1,101 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const chalk = require("chalk");
-const { yellow, green, red } = chalk;
 const { findUserByEmail, createUser } = require("../models/userModel");
+const { sendEmail } = require("../utils/mailer");
 
 const secret = process.env.JWT_SECRET;
 
+const verificationCodes = new Map();
+const pendingUsers = new Map();
 
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
-const register = async (name, email, password) => {
-  const timestamp = new Date().toISOString();
-  console.log(yellow(`[DEBUG] Register called for email: ${email} at ${timestamp}`));
-  const hashed = await bcrypt.hash(password, 10);
-  console.log(yellow(`[DEBUG] Password hashed for email: ${email} at ${timestamp}`));
-  await createUser(name, email, hashed);
-  console.log(green(`[SUCESS] User created for email: ${email} at ${timestamp}`));
+const sendVerificationCode = async (email, userData) => {
+  email = email.toLowerCase();
+
+  const existingUser = await findUserByEmail(email);
+  if (existingUser) throw new Error("Email já registado");
+
+  const code = generateCode();
+  verificationCodes.set(email, { code, expires: Date.now() + 10 * 60 * 1000 });
+  pendingUsers.set(email, userData);
+
+  const subject = "Seu código de verificação";
+  const html = `<p>Olá ${userData.firstName},</p>
+                <p>Seu código de verificação é: <b>${code}</b></p>
+                <p>O código é válido por 10 minutos.</p>`;
+
+  await sendEmail(email, subject, html);
+
+  console.log(`Código de verificação enviado para ${email}: ${code} (válido 10 min)`);
+
+  return true;
 };
 
+const verifyCodeAndRegister = async (email, code) => {
+  email = email.toLowerCase();
 
+  const data = verificationCodes.get(email);
+  if (!data) return false;
+  if (Date.now() > data.expires) {
+    verificationCodes.delete(email);
+    pendingUsers.delete(email);
+    return false;
+  }
+  if (data.code !== code) return false;
+
+  const userData = pendingUsers.get(email);
+  if (!userData) return false;
+
+  const hashed = await bcrypt.hash(userData.password, 10);
+  await createUser(
+    userData.firstName,
+    userData.surname,
+    userData.companyName,
+    userData.countryCode,
+    userData.phone,
+    email,
+    hashed,
+    userData.plan
+  );
+
+  verificationCodes.delete(email);
+  pendingUsers.delete(email);
+
+  console.log(`User criado: ${email}`);
+
+  return true;
+};
 
 const login = async (email, password) => {
-  const timestamp = new Date().toISOString();
-  console.log(yellow(`[DEBUG] Login called for email: ${email} at ${timestamp}`));
+  email = email.toLowerCase();
+
   const user = await findUserByEmail(email);
-  if (!user) {
-    console.log(red(`[ERROR] User not found for email: ${email} at ${timestamp}`));
-    throw new Error("Utilizador não encontrado");
-  }
-  console.log(green(`[SUCESS] User found for email: ${email} at ${timestamp}`));
+  if (!user) throw new Error("Utilizador não encontrado");
 
   const match = await bcrypt.compare(password, user.password);
-  if (!match) {
-    console.log(red(`[ERROR] Invalid password for email: ${email} at ${timestamp}`));
-    throw new Error("Senha inválida");
-  }
-  console.log(green(`[SUCESS] Password matched for email: ${email} at ${timestamp}`));
+  if (!match) throw new Error("Senha inválida");
 
-  const token = jwt.sign({ id: user.id, name:user.name, email: user.email }, secret, { expiresIn: "2h" });
-  console.log(green(`[SUCESS] JWT generated for email: ${email} at ${timestamp}`));
+  const token = jwt.sign({
+    id: user.id,
+    firstName: user.first_name,
+    surname: user.surname,
+    companyName: user.company_name,
+    countryCode: user.country_code,
+    phone: user.phone,
+    email: user.email,
+    plan: user.plan,
+    createdAt: user.created_at
+  }, secret, { expiresIn: "2h" });
+
+  console.log(`JWT gerado para: ${email}`);
   return token;
 };
 
-module.exports = { register, login };
+module.exports = {
+  sendVerificationCode,
+  verifyCodeAndRegister,
+  login,
+};

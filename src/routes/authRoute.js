@@ -2,31 +2,31 @@ const express = require("express");
 const chalk = require("chalk");
 const { yellow, green } = chalk;
 
-const { registerController, loginController } = require("../controllers/authController");
+const {
+  registerController,
+  loginController,
+  startRegisterController,
+  verifyCodeController,
+} = require("../controllers/authController");
+
 const authMiddleware = require("../middlewares/authMiddleware");
 const authenticateJWT = require("../middlewares/authJWTMiddleware");
 
 const router = express.Router();
 
 router.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  console.log(yellow(`[DEBUG] ${req.method} request to ${req.originalUrl} at ${timestamp}`));
-  console.log(yellow(`[DEBUG] Request body: ${JSON.stringify(req.body, null, 2)}`));
+  console.log(yellow(`[DEBUG] ${req.method} ${req.originalUrl} - Body: ${JSON.stringify(req.body)}`));
   next();
 });
 
-router.post("/register", authMiddleware, (req, res, next) => {
-  console.log(yellow(`[DEBUG] Register route called at ${new Date().toISOString()}`));
-  registerController(req, res, next);
-});
+router.post("/start-register", startRegisterController);
 
-router.post("/login", authMiddleware, (req, res, next) => {
-  console.log(yellow(`[DEBUG] Login route called at ${new Date().toISOString()}`));
-  loginController(req, res, next);
-});
+router.post("/verify-code", verifyCodeController);
+
+router.post("/login", authMiddleware, loginController);
 
 router.get("/validate", authenticateJWT, (req, res) => {
-  console.log(green(`[SUCESS] Validate route accessed by user: ${req.user.email || 'N/A'} at ${new Date().toISOString()}`));
+  console.log(green(`[SUCCESS] Validate accessed by ${req.user.email}`));
   res.json({ ok: true, user: req.user });
 });
 
