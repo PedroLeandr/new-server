@@ -1,6 +1,8 @@
 const mysql = require("mysql2/promise");
+const chalk = require("chalk");
+const { yellow, green } = chalk;
 
-console.log("[DEBUG] Initializing MySQL connection pool at", new Date().toISOString());
+console.log(yellow("[DEBUG] Initializing MySQL connection pool at"), new Date().toISOString());
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -9,11 +11,13 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 });
 
-console.log("[SUCESS] MySQL connection pool created with config:", {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  database: process.env.DB_NAME,
-  timestamp: new Date().toISOString()
-});
+console.log(green("[SUCESS] MySQL connection pool created with config:"),
+  {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    database: process.env.DB_NAME,
+    timestamp: new Date().toISOString(),
+  }
+);
 
 module.exports = pool;
