@@ -2,6 +2,8 @@ const express = require("express");
 const { registerController, loginController } = require("../controllers/authController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
+const authenticateJWT = require("../middlewares/authJWTMiddleware");
+
 const router = express.Router();
 
 router.use((req, res, next) => {
@@ -22,5 +24,10 @@ router.post("/login", authMiddleware, (req, res, next) => {
   console.log("[DEBUG] Login route called at", new Date().toISOString());
   loginController(req, res, next);
 });
+
+router.get("/validate", authenticateJWT, (req, res) => {
+  res.json({ ok: true, user: req.user });
+});
+
 
 module.exports = router;
