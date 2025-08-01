@@ -95,7 +95,7 @@ const verifyCodeAndRegister = async (email, code) => {
   }
 };
 
-const sendVerificationPasswordResetCode = async (email, userData) => {
+const sendVerificationPasswordResetCode = async (email) => {
   try {
     console.debug("[sendVerificationPasswordResetCode] Email:", email);
 
@@ -106,12 +106,17 @@ const sendVerificationPasswordResetCode = async (email, userData) => {
       throw new Error("Email não registado");
     }
 
+    const userData = await getUserByEmail(email);
+    if (!userData) {
+      throw new Error("Utilizador não encontrado na base de dados");
+    }
+
     const code = generateCode();
     verificationCodes.set(email, { code, expires: Date.now() + 10 * 60 * 1000 });
     pendingUsers.set(email, userData);
 
     const subject = "Seu código de verificação";
-    const html = `<p>Olá ${userData.firstName},</p><p>Seu código de verificação é: <b>${code}</b></p><p>O código é válido por 10 minutos.</p>`;
+    const html = `<p>Olá ${userData.firstName} ${userData.surname},</p><p>Seu código de verificação é: <b>${code}</b></p><p>O código é válido por 10 minutos.</p>`;
 
     await sendEmail(email, subject, html);
 

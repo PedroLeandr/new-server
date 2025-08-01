@@ -23,6 +23,18 @@ const createUser = async (firstName, surname, companyName, countryCode, phone, e
   console.log(green(`[SUCESS] User ${firstName} ${surname} created for email: ${email} at ${timestamp}`));
 };
 
+const getUserByEmail = async (email) => {
+  const timestamp = new Date().toISOString();
+  console.log(yellow(`[DEBUG] getUserByEmail called for email: ${email} at ${timestamp}`));
+  const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+  if (rows[0]) {
+    console.log(green(`[SUCESS] User found for email: ${email} at ${timestamp}`));
+  } else {
+    console.log(red(`[ERROR] No user found for email: ${email} at ${timestamp}`));
+  }
+  return rows[0];
+}
+
 const changeUserPassword = async (email, hashedPassword) => {
   const timestamp = new Date().toISOString();
   console.log(yellow(`[DEBUG] changeUserPassword called for email: ${email} at ${timestamp}`));
@@ -33,5 +45,6 @@ const changeUserPassword = async (email, hashedPassword) => {
 module.exports = { 
   findUserByEmail, 
   createUser, 
-  changeUserPassword 
+  changeUserPassword,
+  getUserByEmail
 };
