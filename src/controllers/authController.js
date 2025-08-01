@@ -1,6 +1,8 @@
 const {
-  sendVerificationCode,
+  sendVerificationRegisterCode,
   verifyCodeAndRegister,
+  sendVerificationPasswordResetCode,
+  verifyCodeForResetPassword,
   login
 } = require("../services/authService");
 
@@ -10,14 +12,14 @@ const { yellow, green, red } = chalk;
 const startRegisterController = async (req, res) => {
   const userData = req.body;
   try {
-    await sendVerificationCode(userData.email, userData);
+    await sendVerificationRegisterCode(userData.email, userData);
     res.status(200).send({ message: "Código de verificação enviado para o email" });
   } catch (err) {
     res.status(400).send({ error: err.message });
   }
 };
 
-const verifyCodeController = async (req, res) => {
+const verifyRegisterCodeController = async (req, res) => {
   const { email, code } = req.body;
   try {
     const success = await verifyCodeAndRegister(email, code);
@@ -27,6 +29,37 @@ const verifyCodeController = async (req, res) => {
     res.status(400).send({ error: err.message });
   }
 };
+
+
+
+const startPasswordResetController = async (req, res) => {
+  const userData = req.body;
+  try {
+    await sendVerificationPasswordResetCode(userData.email, userData);
+    res.status(200).send({ message: "Código de verificação enviado para o email" });
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
+};
+
+const verifyPasswordResetCodeController = async (req, res) => {
+  const { email, newPassword, code } = req.body;
+  try {
+    const success = await verifyCodeForResetPassword(email, newPassword, code);
+    if (!success) return res.status(400).send({ error: "Código inválido ou expirado" });
+    try {
+      await verifyCodeForResetPassword(email, newPassword, code);
+      console.log(green(`[SUCCESS] Password reset for ${email} at ${new Date().toISOString()}`));
+    } catch (err) {
+      return res.status(400).send({ error: err.message });
+    }
+    res.status(201).send({ message: "Registo confirmado e utilizador criado" });
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
+};
+
+
 
 const loginController = async (req, res) => {
   const { email, password } = req.body;
@@ -40,6 +73,8 @@ const loginController = async (req, res) => {
 
 module.exports = {
   startRegisterController,
-  verifyCodeController,
+  verifyRegisterCodeController,
+  startPasswordResetController,
+  verifyPasswordResetCodeController,
   loginController,
 };

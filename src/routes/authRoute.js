@@ -3,10 +3,11 @@ const chalk = require("chalk");
 const { yellow, green } = chalk;
 
 const {
-  registerController,
   loginController,
   startRegisterController,
-  verifyCodeController,
+  verifyRegisterCodeController,
+  startPasswordResetController,
+  verifyPasswordResetCodeController
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -21,7 +22,15 @@ router.use((req, res, next) => {
 
 router.post("/start-register", startRegisterController);
 
-router.post("/verify-code", verifyCodeController);
+router.post("/verify-register-code", verifyRegisterCodeController);
+
+
+
+router.post("/start-password-reset", startPasswordResetController);
+
+router.post("/verify-password-reset-code", verifyPasswordResetCodeController);
+
+
 
 router.post("/login", authMiddleware, loginController);
 

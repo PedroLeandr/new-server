@@ -23,4 +23,15 @@ const createUser = async (firstName, surname, companyName, countryCode, phone, e
   console.log(green(`[SUCESS] User ${firstName} ${surname} created for email: ${email} at ${timestamp}`));
 };
 
-module.exports = { findUserByEmail, createUser };
+const changeUserPassword = async (email, hashedPassword) => {
+  const timestamp = new Date().toISOString();
+  console.log(yellow(`[DEBUG] changeUserPassword called for email: ${email} at ${timestamp}`));
+  await db.query("UPDATE users SET password = ? WHERE email = ?", [hashedPassword, email]);
+  console.log(green(`[SUCESS] Password changed for user: ${email} at ${timestamp}`));
+};
+
+module.exports = { 
+  findUserByEmail, 
+  createUser, 
+  changeUserPassword 
+};
