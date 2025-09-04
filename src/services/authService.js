@@ -4,7 +4,8 @@ const {
   findUserByEmail, 
   createUser, 
   changeUserPassword,
-  getUserByEmail
+  getUserByEmail,
+  deleteUser
 } = require("../models/userModel");
 const { sendEmail } = require("../utils/mailer");
 
@@ -34,7 +35,7 @@ const sendVerificationRegisterCode = async (email, userData) => {
     pendingUsers.set(email, userData);
 
     const subject = "Seu código de verificação";
-    const html = `<p>Olá ${userData.firstName},</p><p>Seu código de verificação é: <b>${code}</b></p><p>O código é válido por 10 minutos.</p>`;
+    const html = `<p>Olá, ${userData.firstName} ${userData.surname}</p><p>Seu código de verificação é: <b>${code}</b></p><p>O código é válido por 10 minutos.</p>`;
 
     await sendEmail(email, subject, html);
 
@@ -121,7 +122,7 @@ const sendVerificationPasswordResetCode = async (email) => {
     pendingUsers.set(email, userData);
 
     const subject = "Seu código de verificação";
-    const html = `<p>Olá ${userData.firstName} ${userData.surname},</p><p>Seu código de verificação é: <b>${code}</b></p><p>O código é válido por 10 minutos.</p>`;
+    const html = `<p>Olá ${userData.first_name} ${userData.surname},</p><p>Seu código de verificação é: <b>${code}</b></p><p>O código é válido por 10 minutos.</p>`;
 
     await sendEmail(email, subject, html);
 
@@ -214,6 +215,7 @@ const login = async (email, password) => {
     throw err;
   }
 };
+
 
 module.exports = {
   sendVerificationRegisterCode,

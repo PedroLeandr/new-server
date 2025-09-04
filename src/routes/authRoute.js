@@ -20,7 +20,7 @@ router.use((req, res, next) => {
   next();
 });
 
-router.post("/start-register", startRegisterController);
+router.post("/start-register", authMiddleware, startRegisterController);
 
 router.post("/verify-register-code", verifyRegisterCodeController);
 

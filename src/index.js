@@ -2,7 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const chalk = require("chalk");
+
 const authRoutes = require("./routes/authRoute");
+const userRoutes = require("./routes/userRoute");
 
 const { yellow, green } = chalk;
 
@@ -24,6 +26,11 @@ app.use("/api/auth", (req, res, next) => {
   console.log(yellow(`[DEBUG] Auth route: ${req.path} at ${new Date().toISOString()}`));
   next();
 }, authRoutes);
+
+app.use("/api/user", (req, res, next) => {
+  console.log(yellow(`[DEBUG] User route: ${req.path} at ${new Date().toISOString()}`));
+  next();
+}, userRoutes);
 
 app.listen(3001, () => {
   console.log(green("[SUCESS] Servidor na porta 3001:"), new Date().toISOString());

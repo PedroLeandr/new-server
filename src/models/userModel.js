@@ -42,9 +42,17 @@ const changeUserPassword = async (email, hashedPassword) => {
   console.log(green(`[SUCESS] Password changed for user: ${email} at ${timestamp}`));
 };
 
+const deleteUser = async (email) => {
+  const timestamp = new Date().toISOString();
+  console.log(yellow(`[DEBUG] deleteUser called for email: ${email} at ${timestamp}`));
+  await db.query("DELETE FROM users WHERE email = ?", [email]);
+  console.log(green(`[SUCESS] User deleted for email: ${email} at ${timestamp}`));
+};
+
 module.exports = { 
   findUserByEmail, 
   createUser, 
   changeUserPassword,
-  getUserByEmail
+  getUserByEmail,
+  deleteUser
 };
