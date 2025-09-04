@@ -179,22 +179,67 @@ const verifyCodeForResetPassword = async (email, newPassword, code) => {
   }
 };
 
-const login = async (email, password) => {
+const loginSendVerificationCode = async (email) => {
   try {
-    console.debug("[login] Email:", email);
-
     email = email.toLowerCase();
     const user = await findUserByEmail(email);
     if (!user) {
-      console.warn(`[login] Utilizador não encontrado: ${email}`);
+      console.warn(`[loginSendVerificationCode] Utilizador não encontrado: ${email}`);
+      throw new Error("Utilizador não encontrado");
+    }
+
+    const code = generateCode();
+    verificationCodes.set(email, { code, expires: Date.now() + 10 * 60 * 1000 });
+    pendingUsers.set(email, { id: user.id, email: user.email });
+
+    const subject = "Código de verificação de login";
+    const html = `<p>Olá ${user.first_name} ${user.surname},</p><p>Seu código de login é: <b>${code}</b></p><p>O código é válido por 10 minutos.</p>`;
+
+    await sendEmail(email, subject, html);
+
+    console.log(`[loginSendVerificationCode] Código enviado para ${email}: ${code}`);
+    return true;
+  } catch (err) {
+    console.error("[loginSendVerificationCode] Erro:", err.message);
+    throw err;
+  }
+};
+
+const verifyCodeAndLogin = async (email, password, code) => {
+  try {
+    email = email.toLowerCase();
+    const user = await findUserByEmail(email);
+    if (!user) {
+      console.warn(`[verifyCodeAndLogin] Utilizador não encontrado: ${email}`);
       throw new Error("Utilizador não encontrado");
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      console.warn(`[login] Senha incorreta para: ${email}`);
+      console.warn(`[verifyCodeAndLogin] Senha incorreta para: ${email}`);
       throw new Error("Senha inválida");
     }
+
+    const data = verificationCodes.get(email);
+    if (!data) {
+      console.warn("[verifyCodeAndLogin] Código não encontrado.");
+      throw new Error("Código de verificação não enviado");
+    }
+
+    if (Date.now() > data.expires) {
+      console.warn("[verifyCodeAndLogin] Código expirado.");
+      verificationCodes.delete(email);
+      pendingUsers.delete(email);
+      throw new Error("Código expirado");
+    }
+
+    if (data.code !== code) {
+      console.warn("[verifyCodeAndLogin] Código inválido.");
+      throw new Error("Código inválido");
+    }
+
+    verificationCodes.delete(email);
+    pendingUsers.delete(email);
 
     const token = jwt.sign({
       id: user.id,
@@ -208,10 +253,10 @@ const login = async (email, password) => {
       createdAt: user.created_at
     }, secret, { expiresIn: "2h" });
 
-    console.log(`[login] JWT gerado para: ${email}`);
+    console.log(`[verifyCodeAndLogin] JWT gerado para: ${email}`);
     return token;
   } catch (err) {
-    console.error("[login] Erro:", err.message);
+    console.error("[verifyCodeAndLogin] Erro:", err.message);
     throw err;
   }
 };
@@ -222,5 +267,6 @@ module.exports = {
   verifyCodeAndRegister,
   sendVerificationPasswordResetCode,
   verifyCodeForResetPassword,
-  login,
+  loginSendVerificationCode,
+  verifyCodeAndLogin,
 };

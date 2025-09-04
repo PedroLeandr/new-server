@@ -3,7 +3,8 @@ const {
   verifyCodeAndRegister,
   sendVerificationPasswordResetCode,
   verifyCodeForResetPassword,
-  login
+  loginSendVerificationCode,
+  verifyCodeAndLogin,
 } = require("../services/authService");
 
 const chalk = require("chalk");
@@ -61,20 +62,32 @@ const verifyPasswordResetCodeController = async (req, res) => {
 
 
 
-const loginController = async (req, res) => {
-  const { email, password } = req.body;
+const startLoginController = async (req, res) => {
+  const { email } = req.body;
   try {
-    const token = await login(email, password);
+    await loginSendVerificationCode(email);
+    res.status(200).send({ message: "Código de verificação enviado para o email" });
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
+};
+
+const verifyLoginCodeController = async (req, res) => {
+  const { email, password, code } = req.body;
+  try {
+    const token = await verifyCodeAndLogin(email, password, code);
     res.json({ token });
   } catch (err) {
     res.status(401).send({ error: err.message });
   }
 };
 
+
 module.exports = {
   startRegisterController,
   verifyRegisterCodeController,
   startPasswordResetController,
   verifyPasswordResetCodeController,
-  loginController,
+  startLoginController,
+  verifyLoginCodeController,
 };

@@ -3,11 +3,12 @@ const chalk = require("chalk");
 const { yellow, green } = chalk;
 
 const {
-  loginController,
   startRegisterController,
   verifyRegisterCodeController,
   startPasswordResetController,
-  verifyPasswordResetCodeController
+  verifyPasswordResetCodeController,
+  startLoginController,
+  verifyLoginCodeController
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -21,18 +22,13 @@ router.use((req, res, next) => {
 });
 
 router.post("/start-register", authMiddleware, startRegisterController);
-
 router.post("/verify-register-code", verifyRegisterCodeController);
 
-
-
 router.post("/start-password-reset", startPasswordResetController);
-
 router.post("/verify-password-reset-code", verifyPasswordResetCodeController);
 
-
-
-router.post("/login", authMiddleware, loginController);
+router.post("/start-login", startLoginController);
+router.post("/verify-login-code", verifyLoginCodeController);
 
 router.get("/validate", authenticateJWT, (req, res) => {
   console.log(green(`[SUCCESS] Validate accessed by ${req.user.email}`));
